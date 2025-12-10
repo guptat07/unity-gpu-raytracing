@@ -8,6 +8,7 @@ public class CamVisualizer : MonoBehaviour
     [Min(1)] public int numCols = 9;
     [Min(0.001f)] public float dotRadius = 0.025f;
     public Color dotColor = Color.white;
+    public Color rayColor = Color.black;
 
     void OnDrawGizmos()
     {
@@ -18,7 +19,6 @@ public class CamVisualizer : MonoBehaviour
     {
         Camera camera = Camera.main;
         Transform cameraT = camera.transform;
-        Gizmos.color = dotColor;
 
         // Determine the projection plane
         float planeHeight = camera.nearClipPlane * Mathf.Tan(Mathf.Deg2Rad * camera.fieldOfView * 0.5f) * 2f;
@@ -36,7 +36,10 @@ public class CamVisualizer : MonoBehaviour
                 Vector3 worldPoint = cameraT.position + cameraT.right * pointOnPlane.x + cameraT.up * pointOnPlane.y + cameraT.forward * pointOnPlane.z;
                 Vector3 direction = (worldPoint - cameraT.position);
 
+                Gizmos.color = dotColor;
                 Gizmos.DrawSphere(worldPoint, dotRadius);
+
+                Gizmos.color = rayColor;
                 Gizmos.DrawRay(cameraT.position, direction);
             }
         }
