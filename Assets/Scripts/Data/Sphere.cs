@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class Sphere
+public struct Sphere
 {
-    public Vector3 position;
+    public Vector3 origin;
     public float radius;
-    public Color color;
+    public RayTracingMaterial material;
 }

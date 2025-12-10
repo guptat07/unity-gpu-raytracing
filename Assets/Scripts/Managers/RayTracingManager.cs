@@ -34,6 +34,32 @@ public class RayTracingManager : MonoBehaviour
             }
 
             UpdateViewPlane(Camera.current);
+
+            // Pass the spheres into the shader
+            // We can use the component we put on the spheres to collect them all
+            RayTracedSphere[] rayTracedSpheres = FindObjectsByType<RayTracedSphere>(FindObjectsSortMode.None);
+            // We need this array to be in a format the shader expects
+            Sphere[] spheres = new Sphere[rayTracedSpheres.Length];
+            // Populate the array
+            for (int i = 0; i < rayTracedSpheres.Length; i++)
+            {
+                spheres[i].origin = rayTracedSpheres[i].transform.position;
+                spheres[i].radius = rayTracedSpheres[i].transform.localScale.x * 0.5f;
+                spheres[i].material = rayTracedSpheres[i].material;
+            }
+            // Create the buffer
+            // Exact same idea as Assignment 3 and 4
+            // Need the number of elements and the size of each element
+            // https://discussions.unity.com/t/lenght-of-structs/97487
+            // ^ provided the function call for size of struct
+            ComputeBuffer sphereBuffer = new ComputeBuffer(spheres.Length, System.Runtime.InteropServices.Marshal.SizeOf(typeof(Sphere)), ComputeBufferType.Structured);
+            // Set the data
+            sphereBuffer.SetData(spheres);
+            // Pass to shader
+            rayTracingMaterial.SetBuffer("spheres", sphereBuffer);
+            rayTracingMaterial.SetInt("numSpheres", spheres.Length);
+
+
             Graphics.Blit(null, destination, rayTracingMaterial);
         }
         else
