@@ -42,12 +42,15 @@ Shader "Unlit/RayTracing"
 
             fixed4 frag (v2f i) : SV_Target
             {
+                // Note that i is the current pixel (so i.uv.x is the x position of the pixel in UV space)
                 float3 pointOnPlane = float3(i.uv - 0.5, 1.0) * ViewPlane;
                 float3 worldPoint = mul(CameraLocalToWorld, float4(pointOnPlane, 1));
 
                 Ray ray;
+                // _WorldSpaceCameraPos is a built-in variable giving the camera position in world space
                 ray.origin = _WorldSpaceCameraPos;
                 ray.direction = normalize(worldPoint - ray.origin);
+                return float4(ray.direction, 0);
             }
             ENDCG
         }

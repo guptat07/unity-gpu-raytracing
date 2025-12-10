@@ -10,8 +10,10 @@ public class RayTracingManager : MonoBehaviour
     // This fragment shader needs the ray that it should use for the calculation.
     // Instead of calculating the ray, we can pass in the camera parameters and have the shader calculate it.
     // The fragment shader will perform a common calculation for each pixel using its unique ray.
+    // We need to pass scene info into the shader (like where the spheres are).
 
     public bool enableSceneView = true;
+    public Shader rayTracingShader;
     Material rayTracingMaterial;
 
     // This function will run when we attach the script to a camera and the camera has rendered.
@@ -21,7 +23,15 @@ public class RayTracingManager : MonoBehaviour
         if (Camera.current.name != "SceneCamera" || enableSceneView)
         {
             // Create the material
-            //ShaderManager.CreateMaterial();
+            if (rayTracingMaterial == null || (rayTracingMaterial.shader != rayTracingShader && rayTracingShader != null))
+            {
+                if (rayTracingShader == null)
+                {
+                    rayTracingShader = Shader.Find("Unlit/Texture");
+                }
+
+                rayTracingMaterial = new Material(rayTracingShader);
+            }
 
             UpdateViewPlane(Camera.current);
             Graphics.Blit(null, destination, rayTracingMaterial);
