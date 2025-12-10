@@ -18,8 +18,18 @@ public class RayTracingManager : MonoBehaviour
     // So, it is basically a post-processing effect.
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        UpdateViewPlane(Camera.current);
-        Graphics.Blit(source, destination, rayTracingMaterial);
+        if (Camera.current.name != "SceneCamera" || enableSceneView)
+        {
+            // Create the material
+            //ShaderManager.CreateMaterial();
+
+            UpdateViewPlane(Camera.current);
+            Graphics.Blit(null, destination, rayTracingMaterial);
+        }
+        else
+        {
+            Graphics.Blit(source, destination);
+        }
     }
 
     void UpdateViewPlane(Camera camera)
