@@ -13,6 +13,7 @@ public struct RayTracingMaterial
     [Range(0,1)] public float specularStrength;
     [Min(1)] public float shininess;
     [Range(0,1)] public int metallic;
+    [Range(0,1)] public float reflectionStrength;
 
 
     public void SetDefaults()
@@ -23,5 +24,6 @@ public struct RayTracingMaterial
         specularStrength = 0.5f;
         shininess = 50.0f;
         metallic = 0;
+        reflectionStrength = 1.0f;
     }
 }

@@ -14,6 +14,7 @@ public class RayTracingManager : MonoBehaviour
 
     public bool enableSceneView = true;
     public Shader rayTracingShader;
+    [Range(1,10)] public int numBounces = 1;
     Material rayTracingMaterial;
 
     // This function will run when we attach the script to a camera and the camera has rendered.
@@ -82,6 +83,8 @@ public class RayTracingManager : MonoBehaviour
             Color ambientLight = RenderSettings.ambientLight;
             // Pass to shader
             rayTracingMaterial.SetVector("ambientLight", ambientLight);
+
+            rayTracingMaterial.SetInt("numBounces", numBounces);
 
             Graphics.Blit(null, destination, rayTracingMaterial);
         }

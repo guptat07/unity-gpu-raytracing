@@ -48,6 +48,7 @@ Shader "Unlit/RayTracing"
                 float specularStrength;
                 float shininess;
                 int metallic;
+                float reflectionStrength;
             };
 
             struct Sphere
@@ -75,6 +76,8 @@ Shader "Unlit/RayTracing"
             int numDirectionalLights;
 
             float4 ambientLight;
+
+            int numBounces;
 
             HitRecord RaySphereIntersect(Ray ray, float3 sphereCenter, float sphereRadius)
             {
@@ -126,26 +129,11 @@ Shader "Unlit/RayTracing"
                 return closestHit;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            float4 ShadeRay(HitRecord closestHit, Ray ray)
             {
                 float4 pixelColor = float4(0, 0, 0, 1);
-                
-                // Note that i is the current pixel (so i.uv.x is the x position of the pixel in UV space)
-                float3 pointOnPlane = float3(i.uv - 0.5, 1.0) * ViewPlane;
-                float3 worldPoint = mul(CameraLocalToWorld, float4(pointOnPlane, 1));
-
-                Ray ray;
-                // _WorldSpaceCameraPos is a built-in variable giving the camera position in world space
-                ray.origin = _WorldSpaceCameraPos;
-                ray.direction = normalize(worldPoint - ray.origin);
-
-                // Check for intersections with all spheres
-                HitRecord closestHit = RayHit(ray);
-                
-                // Lighting
-                if (closestHit.hit)
-                {
-                    for (int i = 0; i < numDirectionalLights; i++)
+                // Shading
+                for (int i = 0; i < numDirectionalLights; i++)
                     {
                         // Check if the point is in shadow
                         Ray shadowRay;
@@ -159,11 +147,13 @@ Shader "Unlit/RayTracing"
                         }
                         else
                         {
+                            // Add the diffuse component
                             float nDotL = max(dot(closestHit.surfaceNormal, lightDirections[i].xyz), 0.0);
                             float3 kDiffuse = closestHit.material.diffuseStrength * closestHit.material.color.rgb;
                             float3 temp = kDiffuse * nDotL;
                             pixelColor.rgb += temp * lightColors[i].rgb;
 
+                            // Add the specular component (accounting for metallic)
                             float3 vH = normalize(-ray.direction + lightDirections[i].xyz);
                             float nDotH = max(dot(closestHit.surfaceNormal, vH), 0.0);
                             float3 kSpecular;
@@ -180,15 +170,61 @@ Shader "Unlit/RayTracing"
                         }
                     }
 
-                    // Ambient Lighting
-                    float3 kAmbient = closestHit.material.ambientStrength * closestHit.material.color.rgb;
-                    pixelColor.rgb += kAmbient * ambientLight.rgb;
-                }
-                else
+                // Ambient Lighting
+                float3 kAmbient = closestHit.material.ambientStrength * closestHit.material.color.rgb;
+                pixelColor.rgb += kAmbient * ambientLight.rgb;
+
+                return pixelColor;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                // Note that i is the current pixel (so i.uv.x is the x position of the pixel in UV space)
+                float3 pointOnPlane = float3(i.uv - 0.5, 1.0) * ViewPlane;
+                float3 worldPoint = mul(CameraLocalToWorld, float4(pointOnPlane, 1));
+
+                Ray ray;
+                // _WorldSpaceCameraPos is a built-in variable giving the camera position in world space
+                ray.origin = _WorldSpaceCameraPos;
+                ray.direction = normalize(worldPoint - ray.origin);
+
+                float4 pixelColor = float4(0, 0, 0, 1);
+                float3 reflectionEnergy = float3(1, 1, 1);
+
+                // Fake recursion (we do a fixed number of bounces)
+                for (int bounce = 0; bounce < numBounces; bounce++)
                 {
-                    // Skybox...
+                    // Check for intersections with all spheres
+                    HitRecord closestHit = RayHit(ray);
+
+                    if (closestHit.hit)
+                    {
+                        pixelColor += float4(reflectionEnergy, 1) * ShadeRay(closestHit, ray);
+
+                        // Check if we need to reflect
+                        if (closestHit.material.reflectionStrength == 0)
+                        {
+                            break;
+                        }
+
+                        // Make the energy weaker
+                        reflectionEnergy *= closestHit.material.reflectionStrength;
+                        
+                        // We need to make the new ray
+                        Ray reflectedRay;
+                        reflectedRay.origin = closestHit.intersectionPoint + closestHit.surfaceNormal * 0.001;
+                        reflectedRay.direction = normalize(reflect(ray.direction, closestHit.surfaceNormal));
+
+                        ray = reflectedRay;
+                    }
+                    else
+                    {
+                        //Skybox...
+                    }
                 }
+
                 
+
                 return pixelColor;
             }
             ENDCG

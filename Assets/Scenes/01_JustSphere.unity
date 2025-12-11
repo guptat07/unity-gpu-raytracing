@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 16c6f638eb79646bcb957ab724ebd850, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -153,7 +153,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RayTracedSphere
   material:
     color: {r: 0, g: 1, b: 0, a: 1}
-    diffuseStrength: 1
+    diffuseStrength: 0.10027
+    ambientStrength: 0.674
+    specularStrength: 0.675
+    shininess: 116.1
+    metallic: 1
+    reflectionStrength: 1
 --- !u!135 &135021537
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -283,7 +288,7 @@ Camera:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -354,6 +359,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RayTracingManager
   enableSceneView: 1
   rayTracingShader: {fileID: 4800000, guid: 118846c5b3431432684818732211e156, type: 3}
+  numBounces: 3
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -783,7 +789,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RayTracedSphere
   material:
     color: {r: 0, g: 0.0009315014, b: 1, a: 0}
-    diffuseStrength: 1
+    diffuseStrength: 0.227
+    ambientStrength: 0.152
+    specularStrength: 1
+    shininess: 85.6
+    metallic: 1
+    reflectionStrength: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
