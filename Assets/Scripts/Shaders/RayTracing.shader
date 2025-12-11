@@ -45,6 +45,9 @@ Shader "Unlit/RayTracing"
                 float4 color;
                 float diffuseStrength;
                 float ambientStrength;
+                float specularStrength;
+                float shininess;
+                int metallic;
             };
 
             struct Sphere
@@ -159,6 +162,20 @@ Shader "Unlit/RayTracing"
                             float nDotL = max(dot(closestHit.surfaceNormal, lightDirections[i].xyz), 0.0);
                             float3 kDiffuse = closestHit.material.diffuseStrength * closestHit.material.color.rgb;
                             float3 temp = kDiffuse * nDotL;
+                            pixelColor.rgb += temp * lightColors[i].rgb;
+
+                            float3 vH = normalize(-ray.direction + lightDirections[i].xyz);
+                            float nDotH = max(dot(closestHit.surfaceNormal, vH), 0.0);
+                            float3 kSpecular;
+                            if (closestHit.material.metallic == 1)
+                            {
+                                kSpecular = closestHit.material.specularStrength * closestHit.material.color.rgb;
+                            }
+                            else
+                            {
+                                kSpecular = closestHit.material.specularStrength * float3(1.0, 1.0, 1.0);
+                            }
+                            temp = kSpecular * pow(nDotH, closestHit.material.shininess);
                             pixelColor.rgb += temp * lightColors[i].rgb;
                         }
                     }

@@ -10,8 +10,9 @@ public struct RayTracingMaterial
     // Let's store a color now and then use a float for the strengths, and then just calculate the k values when needed.
     [Range(0.1f,1)] public float diffuseStrength;
     [Range(0.1f,1)] public float ambientStrength;
-    // public Vector3 speciularCoefficient;
-    // public float shininess;
+    [Range(0,1)] public float specularStrength;
+    [Min(1)] public float shininess;
+    [Range(0,1)] public int metallic;
 
 
     public void SetDefaults()
@@ -19,5 +20,8 @@ public struct RayTracingMaterial
         color = Color.white;
         diffuseStrength = 1.0f;
         ambientStrength = 0.1f;
+        specularStrength = 0.5f;
+        shininess = 50.0f;
+        metallic = 0;
     }
 }
