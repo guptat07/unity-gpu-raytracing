@@ -2,6 +2,8 @@
 Exploration of simple ray tracing on the GPU (fragment shader) using the Unity Game Engine.
 Implements all tasks from Assignment 1 and 2 on the GPU.
 
+Report is in the root directory as a PDF.
+
 This code runs in the Unity Editor View.
 Please install Unity v6.3 and open the project.
 
