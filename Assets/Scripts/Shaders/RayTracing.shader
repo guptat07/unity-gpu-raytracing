@@ -132,6 +132,8 @@ Shader "Unlit/RayTracing"
             float4 ShadeRay(HitRecord closestHit, Ray ray)
             {
                 float4 pixelColor = float4(0, 0, 0, 1);
+                // Need to gamma correct... so dumb
+                float3 correctedColor = pow(closestHit.material.color.rgb, float3(2.2, 2.2, 2.2));
                 // Shading
                 for (int i = 0; i < numDirectionalLights; i++)
                     {
@@ -146,10 +148,10 @@ Shader "Unlit/RayTracing"
                             continue;
                         }
                         else
-                        {
+                        {   
                             // Add the diffuse component
                             float nDotL = max(dot(closestHit.surfaceNormal, lightDirections[i].xyz), 0.0);
-                            float3 kDiffuse = closestHit.material.diffuseStrength * closestHit.material.color.rgb;
+                            float3 kDiffuse = closestHit.material.diffuseStrength * correctedColor;
                             float3 temp = kDiffuse * nDotL;
                             pixelColor.rgb += temp * lightColors[i].rgb;
 
@@ -159,7 +161,7 @@ Shader "Unlit/RayTracing"
                             float3 kSpecular;
                             if (closestHit.material.metallic == 1)
                             {
-                                kSpecular = closestHit.material.specularStrength * closestHit.material.color.rgb;
+                                kSpecular = closestHit.material.specularStrength * correctedColor;
                             }
                             else
                             {
@@ -171,7 +173,7 @@ Shader "Unlit/RayTracing"
                     }
 
                 // Ambient Lighting
-                float3 kAmbient = closestHit.material.ambientStrength * closestHit.material.color.rgb;
+                float3 kAmbient = closestHit.material.ambientStrength * correctedColor;
                 pixelColor.rgb += kAmbient * ambientLight.rgb;
 
                 return pixelColor;
