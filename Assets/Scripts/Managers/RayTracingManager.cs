@@ -59,6 +59,29 @@ public class RayTracingManager : MonoBehaviour
             rayTracingMaterial.SetBuffer("spheres", sphereBuffer);
             rayTracingMaterial.SetInt("numSpheres", spheres.Length);
 
+            // Pass lights into the shader
+            // Collect directional lights
+            RayTracedDirectionalLight[] rayTracedDirectionalLights = FindObjectsByType<RayTracedDirectionalLight>(FindObjectsSortMode.None);
+            // I think making a sphere struct is maybe redundant, so just pass arrays of data
+            Vector4[] lightDirections = new Vector4[rayTracedDirectionalLights.Length];
+            Vector4[] lightColors = new Vector4[rayTracedDirectionalLights.Length];
+            // Populate arrays
+            for (int i = 0; i < rayTracedDirectionalLights.Length; i++)
+            {
+                Light light = rayTracedDirectionalLights[i].GetComponent<Light>();
+
+                lightDirections[i] =  (-rayTracedDirectionalLights[i].transform.forward).normalized;
+                lightColors[i] = light.color * light.intensity;
+            }
+            // Pass to shader
+            rayTracingMaterial.SetVectorArray("lightDirections", lightDirections);
+            rayTracingMaterial.SetVectorArray("lightColors", lightColors);
+            rayTracingMaterial.SetInt("numDirectionalLights", rayTracedDirectionalLights.Length);
+
+            // Get the ambient light
+            Color ambientLight = RenderSettings.ambientLight;
+            // Pass to shader
+            rayTracingMaterial.SetVector("ambientLight", ambientLight);
 
             Graphics.Blit(null, destination, rayTracingMaterial);
         }

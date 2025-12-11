@@ -43,6 +43,8 @@ Shader "Unlit/RayTracing"
             struct RayTracingMaterial
             {
                 float4 color;
+                float diffuseStrength;
+                float ambientStrength;
             };
 
             struct Sphere
@@ -63,6 +65,13 @@ Shader "Unlit/RayTracing"
 
             StructuredBuffer<Sphere> spheres;
             int numSpheres;
+
+            #define MAX_DIRECTIONAL_LIGHTS 16
+            float4 lightDirections[MAX_DIRECTIONAL_LIGHTS];
+            float4 lightColors[MAX_DIRECTIONAL_LIGHTS];
+            int numDirectionalLights;
+
+            float4 ambientLight;
 
             HitRecord RaySphereIntersect(Ray ray, float3 sphereCenter, float sphereRadius)
             {
@@ -92,17 +101,9 @@ Shader "Unlit/RayTracing"
                 return recordToReturn;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            HitRecord RayHit(Ray ray)
             {
-                // Note that i is the current pixel (so i.uv.x is the x position of the pixel in UV space)
-                float3 pointOnPlane = float3(i.uv - 0.5, 1.0) * ViewPlane;
-                float3 worldPoint = mul(CameraLocalToWorld, float4(pointOnPlane, 1));
-
-                Ray ray;
-                // _WorldSpaceCameraPos is a built-in variable giving the camera position in world space
-                ray.origin = _WorldSpaceCameraPos;
-                ray.direction = normalize(worldPoint - ray.origin);
-
+                // Check for intersections with all spheres
                 HitRecord closestHit;
                 closestHit.hit = false;
                 closestHit.tParameter = 1e20;
@@ -118,8 +119,60 @@ Shader "Unlit/RayTracing"
                         closestHit.material = currentSphere.material;
                     }
                 }
+
+                return closestHit;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                float4 pixelColor = float4(0, 0, 0, 1);
                 
-                return closestHit.material.color;
+                // Note that i is the current pixel (so i.uv.x is the x position of the pixel in UV space)
+                float3 pointOnPlane = float3(i.uv - 0.5, 1.0) * ViewPlane;
+                float3 worldPoint = mul(CameraLocalToWorld, float4(pointOnPlane, 1));
+
+                Ray ray;
+                // _WorldSpaceCameraPos is a built-in variable giving the camera position in world space
+                ray.origin = _WorldSpaceCameraPos;
+                ray.direction = normalize(worldPoint - ray.origin);
+
+                // Check for intersections with all spheres
+                HitRecord closestHit = RayHit(ray);
+                
+                // Lighting
+                if (closestHit.hit)
+                {
+                    for (int i = 0; i < numDirectionalLights; i++)
+                    {
+                        // Check if the point is in shadow
+                        Ray shadowRay;
+                        shadowRay.origin = closestHit.intersectionPoint + closestHit.surfaceNormal * 0.001;
+                        shadowRay.direction = lightDirections[i].xyz;
+                        HitRecord shadowHit = RayHit(shadowRay);
+
+                        if (shadowHit.hit)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            float nDotL = max(dot(closestHit.surfaceNormal, lightDirections[i].xyz), 0.0);
+                            float3 kDiffuse = closestHit.material.diffuseStrength * closestHit.material.color.rgb;
+                            float3 temp = kDiffuse * nDotL;
+                            pixelColor.rgb += temp * lightColors[i].rgb;
+                        }
+                    }
+
+                    // Ambient Lighting
+                    float3 kAmbient = closestHit.material.ambientStrength * closestHit.material.color.rgb;
+                    pixelColor.rgb += kAmbient * ambientLight.rgb;
+                }
+                else
+                {
+                    // Skybox...
+                }
+                
+                return pixelColor;
             }
             ENDCG
         }
